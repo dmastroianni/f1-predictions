@@ -2,6 +2,9 @@
 
 For over 20 years I have been playing a prediction game of F1 competitive sessions (quali and races, and more recently sprint qualis and sprint races) with a friend back in Brazil using a shared spreadsheet.
 
+# IMPORTANT
+I am creating this project to experiment with things that are new for me or that I haven't done in a while. Even though the visibility of the project is public, shall you decide to use it, please do so at your own risk. 
+
 This web app digitizes that experience with a modern, easy-to-use interface built on Firebase.
 
 ## Features
