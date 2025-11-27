@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read their own user document
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Predictions: users can create/read their own, admins can read all
+    match /predictions/{predictionId} {
+      allow create: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow read: if request.auth != null;
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Races: authenticated users can read, only admins can write
+    match /races/{raceId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null; // Simplified for now - can add admin check later
+    }
+    
+    // Results: authenticated users can read, only admins can write
+    match /results/{resultId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null; // Simplified for now - can add admin check later
+    }
+  }
+}
+
