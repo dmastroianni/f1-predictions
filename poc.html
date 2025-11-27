@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F1 Predictions - POC</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .navbar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .navbar-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    .navbar-brand h1 {
+      font-size: 1.5rem;
+      color: #667eea;
+      margin: 0;
+    }
+
+    .navbar-links {
+      display: flex;
+      gap: 2rem;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .navbar-links a {
+      text-decoration: none;
+      color: #333;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .navbar-links a:hover {
+      background: #f0f0f0;
+      color: #667eea;
+    }
+
+    .navbar-links a.active {
+      background: #667eea;
+      color: white;
+    }
+
+    .navbar-user {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .navbar-user span {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .sign-out-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.3s ease;
+    }
+
+    .sign-out-btn:hover {
+      background: #c0392b;
+    }
+
+    .login-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      padding: 3rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .login-card h1 {
+      text-align: center;
+      color: #667eea;
+      margin-bottom: 0.5rem;
+      font-size: 2rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group label {
+      font-weight: 500;
+      color: #333;
+      font-size: 0.9rem;
+    }
+
+    .form-group input, .form-group select {
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .error-message, .message {
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .error-message {
+      background: #fee;
+      color: #c33;
+    }
+
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .submit-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      background: #5568d3;
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .dashboard-container, .predictions-container, .results-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      min-height: calc(100vh - 80px);
+    }
+
+    .dashboard-header, .predictions-header, .results-header {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: white;
+    }
+
+    .dashboard-header h1, .predictions-header h1, .results-header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .dashboard-header p, .predictions-header p, .results-header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .predictions-card, .results-card {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .select-wrapper {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .select-wrapper select {
+      flex: 1;
+    }
+
+    .add-race-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: background 0.3s ease;
+    }
+
+    .add-race-btn:hover {
+      background: #5568d3;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .paste-btn {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .paste-btn:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    .positions-grid {
+      margin: 2rem 0;
+    }
+
+    .positions-grid h3 {
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .positions-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .position-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .position-number {
+      font-weight: 600;
+      color: #667eea;
+      min-width: 35px;
+    }
+
+    .position-item select {
+      flex: 1;
+      padding: 0.5rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .scores-table {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .scores-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .scores-table thead {
+      background: #667eea;
+      color: white;
+    }
+
+    .scores-table th {
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .scores-table td {
+      padding: 1rem;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .scores-table tbody tr:hover {
+      background: #f8f9ff;
+    }
+
+    .rank {
+      font-weight: 600;
+      font-size: 1.1rem;
+      width: 80px;
+    }
+
+    .points {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .races {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .race-badge {
+      background: #f0f0f0;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .empty-state {
+      background: white;
+      border-radius: 12px;
+      padding: 3rem;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .empty-state p {
+      color: #666;
+      font-size: 1.1rem;
+    }
+
+    .demo-banner {
+      background: #ffc107;
+      color: #333;
+      padding: 0.75rem;
+      text-align: center;
+      font-weight: 600;
+      border-bottom: 2px solid #ff9800;
+    }
+
+    @media (max-width: 768px) {
+      .navbar-container {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .navbar-links {
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      .positions-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    // Mock data storage using localStorage
+    const Storage = {
+      get: (key) => {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : null;
+      },
+      set: (key, value) => {
+        localStorage.setItem(key, JSON.stringify(value));
+      },
+      remove: (key) => {
+        localStorage.removeItem(key);
+      }
+    };
+
+    // Initialize mock data if not exists
+    if (!Storage.get('races')) {
+      Storage.set('races', [
+        { id: '1', name: 'Bahrain GP', date: '2024-03-02' },
+        { id: '2', name: 'Saudi Arabia GP', date: '2024-03-09' },
+        { id: '3', name: 'Australian GP', date: '2024-03-24' }
+      ]);
+    }
+    if (!Storage.get('predictions')) {
+      Storage.set('predictions', []);
+    }
+    if (!Storage.get('results')) {
+      Storage.set('results', []);
+    }
+
+    const DRIVERS = [
+      'VER', 'PER', 'LEC', 'SAI', 'HAM', 'RUS', 'NOR', 'PIA',
+      'ALO', 'STR', 'OCO', 'GAS', 'BOT', 'ZHO', 'ALB', 'SAR',
+      'MAG', 'HUL', 'TSU', 'RIC'
+    ];
+
+    let currentUser = Storage.get('currentUser');
+    let currentPage = 'login';
+
+    // Calculate scores
+    function calculateScores(predictedPositions, actualPositions) {
+      if (!predictedPositions || !actualPositions) return 0;
+      let points = 0;
+      for (const position in predictedPositions) {
+        if (predictedPositions[position] === actualPositions[position]) {
+          points += 1;
+        }
+      }
+      return points;
+    }
+
+    // Navigation
+    function navigate(page) {
+      currentPage = page;
+      render();
+    }
+
+    // Login
+    function handleLogin(email) {
+      currentUser = { email, id: email.replace('@', '_') };
+      Storage.set('currentUser', currentUser);
+      navigate('dashboard');
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      Storage.remove('currentUser');
+      navigate('login');
+    }
+
+    // Render functions
+    function renderNavbar() {
+      if (!currentUser) return '';
+      return `
+        <div class="navbar">
+          <div class="navbar-container">
+            <div class="navbar-brand">
+              <h1>🏎️ F1 Predictions</h1>
+            </div>
+            <div class="navbar-links">
+              <a href="#" onclick="navigate('dashboard'); return false;" class="${currentPage === 'dashboard' ? 'active' : ''}">Dashboard</a>
+              <a href="#" onclick="navigate('predictions'); return false;" class="${currentPage === 'predictions' ? 'active' : ''}">Predictions</a>
+              <a href="#" onclick="navigate('results'); return false;" class="${currentPage === 'results' ? 'active' : ''}">Results</a>
+            </div>
+            <div class="navbar-user">
+              <span>${currentUser.email}</span>
+              <button class="sign-out-btn" onclick="handleLogout()">Sign Out</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderLogin() {
+      return `
+        <div class="login-container">
+          <div class="login-card">
+            <h1>🏎️ F1 Predictions</h1>
+            <p class="subtitle">Predict F1 races and compete with friends</p>
+            <div class="demo-banner">DEMO MODE - No Firebase Required</div>
+            <form class="login-form" onsubmit="event.preventDefault(); handleLogin(document.getElementById('email').value);">
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="demo@example.com" required>
+              </div>
+              <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Any password works" required>
+              </div>
+              <button type="submit" class="submit-btn">Sign In (Demo Mode)</button>
+            </form>
+            <p style="text-align: center; margin-top: 1rem; color: #666; font-size: 0.85rem;">
+              In demo mode, any email/password combination works. Data is stored locally in your browser.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDashboard() {
+      const races = Storage.get('races') || [];
+      const predictions = Storage.get('predictions') || [];
+      const results = Storage.get('results') || [];
+
+      // Calculate scores
+      const raceResults = {};
+      results.forEach(result => {
+        const key = `${result.raceId}_${result.sessionType}`;
+        raceResults[key] = result.positions;
+      });
+
+      const userScores = {};
+      predictions.forEach(prediction => {
+        const resultKey = `${prediction.raceId}_${prediction.sessionType}`;
+        const raceResult = raceResults[resultKey];
+        if (!raceResult) return;
+
+        if (!userScores[prediction.userId]) {
+          userScores[prediction.userId] = {
+            userId: prediction.userId,
+            userEmail: prediction.userEmail,
+            totalPoints: 0,
+            races: {}
+          };
+        }
+
+        const points = calculateScores(prediction.positions, raceResult);
+        userScores[prediction.userId].totalPoints += points;
+        
+        const raceKey = `${prediction.raceId}_${prediction.sessionType}`;
+        const race = races.find(r => r.id === prediction.raceId);
+        userScores[prediction.userId].races[raceKey] = {
+          raceName: race ? race.name : 'Unknown',
+          points,
+          sessionType: prediction.sessionType
+        };
+      });
+
+      const scoresArray = Object.values(userScores).sort((a, b) => b.totalPoints - a.totalPoints);
+
+      return `
+        <div class="dashboard-container">
+          <div class="dashboard-header">
+            <h1>🏆 Leaderboard</h1>
+            <p>Track your F1 prediction scores</p>
+          </div>
+          ${scoresArray.length === 0 ? `
+            <div class="empty-state">
+              <p>No predictions or results yet. Start by submitting predictions!</p>
+            </div>
+          ` : `
+            <div class="scores-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Total Points</th>
+                    <th>Races</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${scoresArray.map((score, index) => `
+                    <tr>
+                      <td class="rank">
+                        ${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                      </td>
+                      <td class="player">${score.userEmail}</td>
+                      <td class="points">${score.totalPoints}</td>
+                      <td class="races">
+                        ${Object.values(score.races).map(race => `
+                          <span class="race-badge">
+                            ${race.raceName} (${race.sessionType}): ${race.points}pt${race.points !== 1 ? 's' : ''}
+                          </span>
+                        `).join('')}
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function renderPredictions() {
+      const races = Storage.get('races') || [];
+      const predictions = Storage.get('predictions') || [];
+      const [selectedRace, setSelectedRace] = ['', (val) => {
+        window.selectedRace = val;
+        render();
+      }];
+      window.selectedRace = window.selectedRace || '';
+
+      const existingPrediction = predictions.find(p => 
+        p.raceId === window.selectedRace && 
+        p.sessionType === (window.sessionType || 'race') &&
+        p.userId === currentUser.id
+      );
+
+      return `
+        <div class="predictions-container">
+          <div class="predictions-header">
+            <h1>📝 Submit Prediction</h1>
+            <p>Predict the finishing positions for a race or qualifying session</p>
+          </div>
+          <div class="predictions-card">
+            <form onsubmit="event.preventDefault(); handleSubmitPrediction();">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Race</label>
+                  <div class="select-wrapper">
+                    <select id="raceSelect" onchange="window.selectedRace = this.value; render();" required>
+                      <option value="">Select a race</option>
+                      ${races.map(race => `
+                        <option value="${race.id}" ${race.id === window.selectedRace ? 'selected' : ''}>
+                          ${race.name} (${new Date(race.date).toLocaleDateString()})
+                        </option>
+                      `).join('')}
+                    </select>
+                    <button type="button" class="add-race-btn" onclick="createNewRace()">+ New Race</button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Session Type</label>
+                  <select id="sessionType" onchange="window.sessionType = this.value; render();" required>
+                    <option value="race" ${(window.sessionType || 'race') === 'race' ? 'selected' : ''}>Race</option>
+                    <option value="quali" ${(window.sessionType || 'race') === 'quali' ? 'selected' : ''}>Qualifying</option>
+                    <option value="sprint" ${(window.sessionType || 'race') === 'sprint' ? 'selected' : ''}>Sprint Race</option>
+                    <option value="sprint-quali" ${(window.sessionType || 'race') === 'sprint-quali' ? 'selected' : ''}>Sprint Qualifying</option>
+                  </select>
+                </div>
+              </div>
+              ${window.selectedRace ? `
+                <div class="positions-grid">
+                  <h3>Predicted Positions</h3>
+                  <div class="positions-list">
+                    ${Array.from({ length: 20 }, (_, i) => i + 1).map(position => {
+                      const existingPos = existingPrediction ? existingPrediction.positions[position] : '';
+                      return `
+                        <div class="position-item">
+                          <span class="position-number">P${position}</span>
+                          <select id="pos_${position}" ${existingPos ? `value="${existingPos}"` : ''}>
+                            <option value="">Select driver</option>
+                            ${DRIVERS.map(driver => `
+                              <option value="${driver}" ${driver === existingPos ? 'selected' : ''}>${driver}</option>
+                            `).join('')}
+                          </select>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              ` : ''}
+              <div id="predictionMessage"></div>
+              <button type="submit" class="submit-btn" ${!window.selectedRace ? 'disabled' : ''}>
+                ${existingPrediction ? 'Update Prediction' : 'Submit Prediction'}
+              </button>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderResults() {
+      const races = Storage.get('races') || [];
+      const results = Storage.get('results') || [];
+      window.selectedRaceResults = window.selectedRaceResults || '';
+      window.sessionTypeResults = window.sessionTypeResults || 'race';
+
+      const existingResult = results.find(r => 
+        r.raceId === window.selectedRaceResults && 
+        r.sessionType === window.sessionTypeResults
+      );
+
+      return `
+        <div class="results-container">
+          <div class="results-header">
+            <h1>🏁 Enter Results</h1>
+            <p>Enter the actual finishing positions for a race or qualifying session</p>
+          </div>
+          <div class="results-card">
+            <form onsubmit="event.preventDefault(); handleSubmitResults();">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Race</label>
+                  <select id="raceSelectResults" onchange="window.selectedRaceResults = this.value; render();" required>
+                    <option value="">Select a race</option>
+                    ${races.map(race => `
+                      <option value="${race.id}" ${race.id === window.selectedRaceResults ? 'selected' : ''}>
+                        ${race.name} (${new Date(race.date).toLocaleDateString()})
+                      </option>
+                    `).join('')}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Session Type</label>
+                  <select id="sessionTypeResults" onchange="window.sessionTypeResults = this.value; render();" required>
+                    <option value="race" ${window.sessionTypeResults === 'race' ? 'selected' : ''}>Race</option>
+                    <option value="quali" ${window.sessionTypeResults === 'quali' ? 'selected' : ''}>Qualifying</option>
+                    <option value="sprint" ${window.sessionTypeResults === 'sprint' ? 'selected' : ''}>Sprint Race</option>
+                    <option value="sprint-quali" ${window.sessionTypeResults === 'sprint-quali' ? 'selected' : ''}>Sprint Qualifying</option>
+                  </select>
+                </div>
+              </div>
+              <div class="action-buttons">
+                <button type="button" class="action-btn paste-btn" onclick="handlePasteResults()">📋 Paste Results</button>
+              </div>
+              ${window.selectedRaceResults ? `
+                <div class="positions-grid">
+                  <h3>Actual Finishing Positions</h3>
+                  <div class="positions-list">
+                    ${Array.from({ length: 20 }, (_, i) => i + 1).map(position => {
+                      const existingPos = existingResult ? existingResult.positions[position] : '';
+                      return `
+                        <div class="position-item">
+                          <span class="position-number">P${position}</span>
+                          <select id="result_pos_${position}" ${existingPos ? `value="${existingPos}"` : ''}>
+                            <option value="">Select driver</option>
+                            ${DRIVERS.map(driver => `
+                              <option value="${driver}" ${driver === existingPos ? 'selected' : ''}>${driver}</option>
+                            `).join('')}
+                          </select>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              ` : ''}
+              <div id="resultsMessage"></div>
+              <button type="submit" class="submit-btn" ${!window.selectedRaceResults ? 'disabled' : ''}>
+                ${existingResult ? 'Update Results' : 'Save Results'}
+              </button>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function render() {
+      const app = document.getElementById('app');
+      let content = '';
+
+      if (!currentUser) {
+        content = renderLogin();
+      } else {
+        content = renderNavbar();
+        switch (currentPage) {
+          case 'dashboard':
+            content += renderDashboard();
+            break;
+          case 'predictions':
+            content += renderPredictions();
+            break;
+          case 'results':
+            content += renderResults();
+            break;
+          default:
+            content += renderDashboard();
+        }
+      }
+
+      app.innerHTML = content;
+    }
+
+    // Event handlers
+    function createNewRace() {
+      const raceName = prompt('Enter race name (e.g., "Bahrain GP"):');
+      if (!raceName) return;
+      const raceDate = prompt('Enter race date (YYYY-MM-DD):');
+      if (!raceDate) return;
+
+      const races = Storage.get('races') || [];
+      const newRace = {
+        id: Date.now().toString(),
+        name: raceName,
+        date: raceDate
+      };
+      races.push(newRace);
+      Storage.set('races', races);
+      render();
+    }
+
+    function handleSubmitPrediction() {
+      const positions = {};
+      for (let i = 1; i <= 20; i++) {
+        const select = document.getElementById(`pos_${i}`);
+        if (select && select.value) {
+          positions[i] = select.value;
+        }
+      }
+
+      const predictions = Storage.get('predictions') || [];
+      const existingIndex = predictions.findIndex(p => 
+        p.raceId === window.selectedRace && 
+        p.sessionType === (window.sessionType || 'race') &&
+        p.userId === currentUser.id
+      );
+
+      const predictionData = {
+        raceId: window.selectedRace,
+        sessionType: window.sessionType || 'race',
+        userId: currentUser.id,
+        userEmail: currentUser.email,
+        positions,
+        createdAt: new Date().toISOString()
+      };
+
+      if (existingIndex >= 0) {
+        predictions[existingIndex] = { ...predictions[existingIndex], ...predictionData };
+      } else {
+        predictions.push(predictionData);
+      }
+
+      Storage.set('predictions', predictions);
+      document.getElementById('predictionMessage').innerHTML = `
+        <div class="message success">Prediction ${existingIndex >= 0 ? 'updated' : 'submitted'} successfully!</div>
+      `;
+      setTimeout(() => {
+        document.getElementById('predictionMessage').innerHTML = '';
+        navigate('dashboard');
+      }, 2000);
+    }
+
+    function handleSubmitResults() {
+      const positions = {};
+      for (let i = 1; i <= 20; i++) {
+        const select = document.getElementById(`result_pos_${i}`);
+        if (select && select.value) {
+          positions[i] = select.value;
+        }
+      }
+
+      const results = Storage.get('results') || [];
+      const existingIndex = results.findIndex(r => 
+        r.raceId === window.selectedRaceResults && 
+        r.sessionType === window.sessionTypeResults
+      );
+
+      const resultData = {
+        raceId: window.selectedRaceResults,
+        sessionType: window.sessionTypeResults,
+        positions,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      if (existingIndex >= 0) {
+        results[existingIndex] = { ...results[existingIndex], ...resultData };
+      } else {
+        results.push(resultData);
+      }
+
+      Storage.set('results', results);
+      document.getElementById('resultsMessage').innerHTML = `
+        <div class="message success">Results ${existingIndex >= 0 ? 'updated' : 'saved'} successfully!</div>
+      `;
+      setTimeout(() => {
+        document.getElementById('resultsMessage').innerHTML = '';
+        navigate('dashboard');
+      }, 2000);
+    }
+
+    function handlePasteResults() {
+      const pasteText = prompt('Paste results (one driver code per line, in finishing order):');
+      if (!pasteText) return;
+
+      const lines = pasteText.trim().split('\n').filter(line => line.trim());
+      lines.forEach((driver, index) => {
+        const driverCode = driver.trim().toUpperCase();
+        if (DRIVERS.includes(driverCode)) {
+          const select = document.getElementById(`result_pos_${index + 1}`);
+          if (select) {
+            select.value = driverCode;
+          }
+        }
+      });
+    }
+
+    // Make functions global
+    window.navigate = navigate;
+    window.handleLogin = handleLogin;
+    window.handleLogout = handleLogout;
+    window.createNewRace = createNewRace;
+    window.handleSubmitPrediction = handleSubmitPrediction;
+    window.handleSubmitResults = handleSubmitResults;
+    window.handlePasteResults = handlePasteResults;
+
+    // Initialize
+    render();
+  </script>
+</body>
+</html>
+

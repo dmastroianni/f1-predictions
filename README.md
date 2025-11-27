@@ -23,6 +23,18 @@ This web app digitizes that experience with a modern, easy-to-use interface buil
 - **Hosting**: Firebase Hosting
 - **All on Firebase Free Tier** ✨
 
+## Quick Start (Local POC)
+
+Want to try it out without any setup? **Just open `poc.html` in your browser!**
+
+- ✅ No Firebase setup required
+- ✅ No npm/node installation needed
+- ✅ Works completely offline
+- ✅ Data stored in browser localStorage
+- ✅ Perfect for quick demos
+
+See [LOCAL_DEV.md](LOCAL_DEV.md) for more local development options.
+
 ## Setup Instructions
 
 ### 1. Install Dependencies
